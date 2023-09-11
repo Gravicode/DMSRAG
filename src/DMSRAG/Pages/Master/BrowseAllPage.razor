@@ -1,0 +1,318 @@
+﻿@page "/browse-all"
+@using Microsoft.AspNetCore.WebUtilities;
+@inject IJSRuntime IJS
+@inject IToastService toastService
+@inject AzureBlobHelper AzureBlobHelper
+@inject UserProfileService UserSvc
+@inject DriveService DriveSvc
+@inject FileStatService FileStatSvc
+@inject NavigationManager NavMgr
+@inject AppState AppState
+@implements IDisposable
+<div class="row">
+    <div class="col-lg-12">
+        <div class="d-flex align-items-center justify-content-between welcome-content mb-3">
+            <h4>All Files</h4>
+            <div class="d-flex align-items-center">
+                <div class="list-grid-toggle mr-4">
+                    <span class="icon icon-grid i-grid"><i class="ri-layout-grid-line font-size-20"></i></span>
+                    <span class="icon icon-grid i-list"><i class="ri-list-check font-size-20"></i></span>
+                    <span class="label label-list">List</span>
+                </div>
+                <div class="dashboard1-dropdown d-flex align-items-center">
+                    <div class="dashboard1-info rounded">
+                        <a href="#calander" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                            <i class="ri-arrow-down-s-line"></i>
+                        </a>
+                        <ul id="calander" class="iq-dropdown collapse list-inline m-0 p-0 mt-2">
+                            <li class="mb-2">
+                                <a href="#" data-toggle="tooltip" data-placement="right" title="Calander">
+                                    <i class="las la-calendar iq-arrow-left"></i>
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="#" data-toggle="tooltip" data-placement="right" title="Keep">
+                                    <i class="las la-lightbulb iq-arrow-left"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-toggle="tooltip" data-placement="right" title="Tasks">
+                                    <i class="las la-tasks iq-arrow-left"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="icon icon-grid i-grid">
+    <div class="row">
+        @if (GroupedFiles != null)
+            foreach (var grpFile in GroupedFiles)
+            {
+                <div class="col-lg-12">
+                    <div class="card card-block card-stretch card-transparent">
+                        <div class="card-header d-flex justify-content-between pb-0">
+                            <div class="header-title">
+                                <h4 class="card-title">@grpFile.GroupName</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @foreach (var file in grpFile.Files)
+                {
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="card card-block card-stretch card-height">
+                            <div class="card-body image-thumb ">
+                                <div class="mb-4 text-center p-3 rounded iq-thumb">
+                                    @if (file.FileType == FileTypes.Image)
+                                    {
+                                        <a class="image-popup-vertical-fit" @onclick="()=>HitDownload(file)" desc="@file.Owner" title="@file.Name" href="@(string.IsNullOrEmpty(file.FileUrl)?"/assets/images/layouts/page-1/01.png":file.FileUrl)">
+                                            <img src="@(string.IsNullOrEmpty(file.FileUrl)?"/assets/images/layouts/page-1/01.png":file.FileUrl)" class="img-fluid" alt="images" />
+                                            <div class="iq-image-overlay"></div>
+                                        </a>
+                                    }
+                                    else if (file.FileType == FileTypes.Pdf)
+                                    {
+                                        <div class="iq-image-overlay"></div>
+                                        <a href="#" data-load-file="file" @onclick="()=>HitDownload(file)" data-load-target="#resolte-contaniner" data-url="@file.FileUrl" data-toggle="modal" data-target="#exampleModal" data-title="@file.Name"><img src="/assets/images/layouts/page-1/pdf.png" class="img-fluid" alt="image1"></a>
+                                    }
+                                    else if (file.FileType == FileTypes.Word)
+                                    {
+                                        <div class="iq-image-overlay"></div>
+                                        <a href="#" data-title="@file.Name" @onclick="()=>HitDownload(file)" data-load-file="file" data-load-target="#resolte-contaniner" data-url="@file.FileUrl" data-toggle="modal" data-target="#exampleModal"><img src="/assets/images/layouts/page-1/doc.png" class="img-fluid" alt="image1"></a>
+                                    }
+                                    else if (file.FileType == FileTypes.Excel)
+                                    {
+                                        <div class="iq-image-overlay"></div>
+                                        <a href="#" data-title="@file.Name" @onclick="()=>HitDownload(file)" data-load-file="file" data-load-target="#resolte-contaniner" data-url="@file.FileUrl" data-toggle="modal" data-target="#exampleModal"><img src="/assets/images/layouts/page-1/xlsx.png" class="img-fluid" alt="image1"></a>
+                                    }
+                                    else if (file.FileType == FileTypes.PowerPoint)
+                                    {
+                                        <div class="iq-image-overlay"></div>
+                                        <a href="#" data-title="@file.Name" @onclick="()=>HitDownload(file)" data-load-file="file" data-load-target="#resolte-contaniner" data-url="@file.FileUrl" data-toggle="modal" data-target="#exampleModal"><img src="/assets/images/layouts/page-1/ppt.png" class="img-fluid" alt="image1"></a>
+                                    }
+                                    else
+                                    {
+                                        <div class="iq-image-overlay"></div>
+                                        <a href="@file.FileUrl" data-title="@file.Name" @onclick="()=>HitDownload(file)" target="_blank"><img src="/assets/images/layouts/page-1/xml.png" class="img-fluid" alt="image1"></a>
+                                    }
+
+                                </div>
+                                <h6>@file.Name</h6>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+    </div>
+</div>
+<div class="icon icon-grid i-list">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card card-block card-stretch card-height">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table mb-0 table-borderless tbl-server-info">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Owner</th>
+                                    <th scope="col">Last Edit</th>
+                                    <th scope="col">File Size</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Files != null)
+                                    @foreach (var file in Files)
+                                    {
+                                        <tr @key="file.UID">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="mr-3">
+                                                        @if (file.FileType == FileTypes.Image)
+                                                        {
+                                                            <a href="#"><img src="@(string.IsNullOrEmpty(file.FileUrl)?"/assets/images/layouts/page-1/01.png":file.FileUrl)" class="img-fluid avatar-30" alt="image1"></a>
+
+                                                        }
+                                                        else if (file.FileType == FileTypes.Pdf)
+                                                        {
+                                                            <a href="#"><img src="/assets/images/layouts/page-1/pdf.png" class="img-fluid avatar-30" alt="image1"></a>
+                                                        }
+                                                        else if (file.FileType == FileTypes.Word)
+                                                        {
+                                                            <a href="#"><img src="/assets/images/layouts/page-1/doc.png" class="img-fluid avatar-30" alt="image1"></a>
+
+                                                        }
+                                                        else if (file.FileType == FileTypes.Excel)
+                                                        {
+                                                            <a href="#"><img src="/assets/images/layouts/page-1/xlsx.png" class="img-fluid avatar-30" alt="image1"></a>
+
+                                                        }
+                                                        else if (file.FileType == FileTypes.PowerPoint)
+                                                        {
+                                                            <a href="#"><img src="/assets/images/layouts/page-1/ppt.png" class="img-fluid avatar-30" alt="image1"></a>
+
+                                                        }
+                                                        else
+                                                        {
+                                                            <a href="#"><img src="/assets/images/layouts/page-1/xml.png" class="img-fluid avatar-30" alt="image1"></a>
+
+                                                        }
+
+                                                    </div>
+                                                    @file.Name
+                                                </div>
+                                            </td>
+                                            <td>@file.Owner</td>
+                                            <td>@(file.UpdatedDate.ToString("MMM dd, yyyy"))</td>
+                                            <td>@(DriveHelper.GetSize(file.Size))</td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <span class="dropdown-toggle" id="dropdownMenuButton6" data-toggle="dropdown">
+                                                        <i class="ri-more-fill"></i>
+                                                    </span>
+                                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton6">
+                                                        <a class="dropdown-item" @onclick="()=>HitDownload(file)" href="@file.FileUrl" target="_blank"><i class="ri-eye-fill mr-2"></i>View</a>
+                                                        <a class="dropdown-item" @onclick="(() => Delete(file))" data-toggle="modal" data-target="#confirmDeleteModal" href="#"><i class="ri-delete-bin-6-fill mr-2"></i>Delete</a>
+                                                        <a class="dropdown-item" href="#" @onclick="()=>SetFavorite(file,true)" @onclick:preventDefault><i class="ri-pencil-fill mr-2"></i>Favorite</a>
+                                                        <a class="dropdown-item" href="#" @onclick="()=>SetFavorite(file,false)" @onclick:preventDefault><i class="ri-eraser-line mr-2"></i>Not Favorite</a>
+                                                        <a class="dropdown-item" @onclick="()=>HitDownload(file)" href="@file.FileUrl" target="_blank"><i class="ri-file-download-fill mr-2"></i>Download</a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public string Keyword { get; set; }
+
+    [Parameter]
+    public string Extension { get; set; }
+
+    [CascadingParameter]
+    public MainLayout Layout { get; set; }
+    public List<GroupedFile> GroupedFiles { get; set; }
+    public List<DriveFile> Files { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+
+    Drive MyDrive { set; get; }
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            DriveSvc.InitDrive(UserName);
+            MyDrive = DriveSvc.MyDrive;
+        }
+        //check query string
+        var uri = NavMgr.ToAbsoluteUri(NavMgr.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("q", out var resultKeyword))
+        {
+            if (!string.IsNullOrEmpty(resultKeyword))
+            {
+                Keyword = resultKeyword;
+            }
+        }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("e", out var resultExt))
+        {
+            if (!string.IsNullOrEmpty(resultExt))
+            {
+                Extension = resultExt;
+            }
+        }
+        LoadData();
+        AppState.OnFolderChange += Refresh;
+
+    }
+    async Task SetFavorite(DriveFile item, bool State)
+    {
+        item.Favorite = State;
+        DriveSvc.Save();
+        toastService.ShowSuccess($"set to {(State ? "favorite" : "not favorite")}");
+    }
+    public override async Task SetParametersAsync(Microsoft.AspNetCore.Components.ParameterView parameters)
+    {
+
+        await base.SetParametersAsync(parameters);
+
+        LoadData();
+    }
+    async void Refresh(string folderuid)
+    {
+        //if (FolderUid == folderuid)
+        {
+            LoadData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    public void Dispose()
+    {
+        AppState.OnFolderChange -= Refresh;
+    }
+    void LoadData()
+    {
+        DriveSvc.Refresh();
+        MyDrive = DriveSvc.MyDrive;
+
+        if (!string.IsNullOrEmpty(Keyword))
+        {
+            Files = DriveSvc.SearchFiles(MyDrive.RootFolder, Keyword,string.Empty);
+
+        }else if (!string.IsNullOrEmpty(Extension))
+        {
+            Files = DriveSvc.SearchFiles(MyDrive.RootFolder, string.Empty, Extension);
+        }
+        else
+        {
+            Files = DriveSvc.GetAllFiles();
+        }
+        
+        GroupedFiles = (from p in Files
+                        group p by p.FileType into g
+                        select new GroupedFile()
+                         {
+                             GroupName = g.Key,
+                             Files = g.ToList()
+                         }).ToList();
+
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            IJS.InvokeVoidAsync("ApplyListGrid");
+        }
+    }
+    async Task HitDownload(DriveFile file)
+    {
+        var log = FileStatSvc.InsertData(new FileStat() { CreatedDate = DateHelper.GetLocalTimeNow(), Name = file.Name, Size = file.Size, StatType = StatTypes.Download, UID = file.UID, Username = UserName });
+    }
+    void NotAvailable()
+    {
+        toastService.ShowWarning("This feature is not available yet.");
+    }
+    async Task Delete(DriveFile item)
+    {
+        //Layout.PrepareDeleteFile(item);
+    }
+}

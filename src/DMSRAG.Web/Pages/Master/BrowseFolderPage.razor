@@ -1,0 +1,309 @@
+﻿@page "/browse-folder"
+@page "/browse-folder/{FolderUid}"
+@inject IJSRuntime IJS
+@inject IToastService toastService
+@inject DataBlobHelper DataBlobHelper
+@inject UserProfileService UserSvc
+@inject DriveService DriveSvc
+@inject AppState AppState
+@inject FileStatService FileStatSvc
+@inject IDialogService DialogService
+@inject NavigationManager NavMgr
+@implements IDisposable
+<MudGrid>
+    <MudItem xs="2">
+        <TreeView OnNodeClicked="OnNodeClick" Root="root" @ref="tree1"></TreeView>
+    </MudItem>
+    <MudItem xs="10">
+        @if (Files == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <MudPaper Class="pa-4 mb-1 mt-1">
+                    <MudButton Size="Size.Small" ButtonType="MudBlazor.ButtonType.Button" @onclick="(() => UploadFile())" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Upload File</MudButton>
+                    <MudButton Size="Size.Small" ButtonType="MudBlazor.ButtonType.Button" @onclick="(() => CreateFolder())" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Create Folder</MudButton>
+            </MudPaper>
+            <MudTable Context="item" Items="@Files" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<DriveFile,bool>(FilterFunc1)" T="DriveFile" MultiSelection="true" @bind-SelectedItems="selectedItems1" SortLabel="Sort By">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">My Files in @SelectedFolder?.Name</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value=searchString1 Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<DriveFile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<DriveFile, object>(x=>x.Extension)">Extension</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<DriveFile, object>(x=>x.FileType)">Type</MudTableSortLabel></MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@item.Name</MudTd>
+                    <MudTd DataLabel="Extension">@item.Extension</MudTd>
+                    <MudTd DataLabel="FileType">
+                        @if (item.FileType == FileTypes.Image)
+                        {
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Custom.FileFormats.FileImage" />
+                            </MudAvatar>                            
+                        }
+                        else if (item.FileType == FileTypes.Pdf)
+                        {
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Custom.FileFormats.FilePdf" />
+                            </MudAvatar>
+                        }
+                        else if (item.FileType == FileTypes.Word)
+                        {
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Custom.FileFormats.FileWord" />
+                            </MudAvatar>
+                        }
+                        else if (item.FileType == FileTypes.Excel)
+                        {
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Custom.FileFormats.FileExcel" />
+                            </MudAvatar>
+                        }
+                        else if (item.FileType == FileTypes.PowerPoint)
+                        {
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Custom.FileFormats.FileVideo" />
+                            </MudAvatar>    
+                        }
+                        else
+                        {
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Custom.FileFormats.FileDocument" />
+                            </MudAvatar>
+                        }
+                    </MudTd>
+
+                    <MudTd DataLabel="Actions">
+                        <MudButton ButtonType="MudBlazor.ButtonType.Button" @onclick="(() => HitDownload(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Size="@Size.Small" StartIcon="@Icons.Material.Filled.Download" Class="mr-1 mt-1">Download</MudButton>
+                        <MudButton ButtonType="MudBlazor.ButtonType.Button" @onclick="(() => PrepareForDelete(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Error" Size="@Size.Small" StartIcon="@Icons.Material.Filled.Delete" Class="mr-1 mt-1">Delete</MudButton>
+                        @if (item.FileType == FileTypes.Pdf)
+                        {
+                            <MudButton ButtonType="MudBlazor.ButtonType.Button" @onclick="(() => Chat(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Size="@Size.Small" StartIcon="@Icons.Material.Filled.Chat" Class="mr-1 mt-1">Chat</MudButton>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+
+                </PagerContent>
+                <NoRecordsContent>
+                    <MudText>Tidak ada item yang ditemukan..</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Sabar menunggu...</MudText>
+                </LoadingContent>
+            </MudTable>
+        }
+    </MudItem>
+</MudGrid>
+@code {
+    DriveFile itemObject;
+    [CascadingParameter]
+    public MainLayout Layout { get; set; }
+    [Parameter]
+    public string FolderUid { get; set; }
+    public DriveFolder SelectedFolder { get; set; }
+    public List<DriveFile> Files { get; set; }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+    private bool dense = true;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    Drive MyDrive { set; get; }
+
+    TreeView.TreeNode root;
+    TreeView tree1 { set; get; }
+
+    private DriveFile selectedItem1 = null;
+
+    private HashSet<DriveFile> selectedItems = new HashSet<DriveFile>();
+
+    private HashSet<DriveFile> selectedItems1 = new HashSet<DriveFile>();
+
+    private string searchString1 = "";
+
+    private bool FilterFunc1(DriveFile element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(DriveFile element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+
+        return false;
+    }
+    async Task Chat(DriveFile item)
+    {
+        NavMgr.NavigateTo($"/QAUrl/{item.UID}");
+
+    }
+    private async Task PrepareForDelete(DriveFile item)
+    {
+        itemObject = item;
+        var options = new MudBlazor.DialogOptions { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<MudConfirmDialog>("Konfirmasi", options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var res = DriveSvc.DeleteFile(SelectedFolder, itemObject.UID);
+
+            //AppState.RefreshFolder(DeleteFileItem.ParentFolderUid);
+            LoadData();
+            itemObject = null;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            DriveSvc.InitDrive(UserName);
+            MyDrive = DriveSvc.MyDrive;
+        }
+        LoadData();
+        AppState.OnFolderChange += Refresh;
+        tree1 = new();
+        GenerateTree();
+    }
+    async Task OnNodeClick(object data)
+    {
+        if (data is DriveFolder selFolder)
+        {
+            FolderUid = selFolder.UID;
+            LoadData();
+        }
+    }
+    void GenerateTree()
+    {
+        root = new TreeView.TreeNode(MyDrive.RootFolder.Name, MyDrive.RootFolder);
+        foreach(var folder in MyDrive.RootFolder.Folders)
+            AddChildTree(root,folder);
+    }
+
+    void AddChildTree(TreeView.TreeNode ParentTree, DriveFolder ParentFolder)
+    {
+        foreach (var item in ParentFolder.Folders)
+        {
+            var childTree = new TreeView.TreeNode(item.Name, item);
+            ParentTree.ChildNodes.Add(childTree);
+            if(item.Folders.Count!=null && item.Folders.Count > 0)
+            {
+                AddChildTree(childTree, item);
+            }
+        }
+    }
+    public override async Task SetParametersAsync(Microsoft.AspNetCore.Components.ParameterView parameters)
+    {
+
+        await base.SetParametersAsync(parameters);
+
+        LoadData();
+    }
+    async void Refresh(string folderuid)
+    {
+        if (FolderUid == folderuid)
+        {
+            LoadData();
+            GenerateTree();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    public void Dispose()
+    {
+        AppState.OnFolderChange -= Refresh;
+    }
+    void LoadData()
+    {
+        DriveSvc.Refresh();
+        MyDrive = DriveSvc.MyDrive;
+        if (!string.IsNullOrEmpty(FolderUid))
+        {
+            SelectedFolder = DriveSvc.GetFolder(FolderUid);
+        }
+        else
+        {
+            FolderUid = MyDrive.RootFolder.Folders.Count > 0 ? MyDrive.RootFolder.Folders[0].UID : MyDrive.RootFolder.UID;
+            SelectedFolder = MyDrive.RootFolder.Folders.Count > 0 ? MyDrive.RootFolder.Folders[0] : MyDrive.RootFolder;
+        }
+
+        if (SelectedFolder != null)
+        {
+            Files = SelectedFolder.Files;
+            //Files = (from p in SelectedFolder.Files
+            //         where !p.IsDeleted
+            //         group p by p.FileType into g
+            //         select new GroupedFile()
+            //             {
+            //                 GroupName = g.Key,
+            //                 Files = g.ToList()
+            //             }).ToList();
+        }
+    }
+    async Task SetFavorite(DriveFile item, bool State)
+    {
+        item.Favorite = State;
+        DriveSvc.Save();
+        toastService.ShowSuccess($"set to {(State ? "favorite" : "not favorite")}");
+    }
+    async Task Delete(DriveFile item)
+    {
+        //Layout.PrepareDeleteFile(item);
+    }
+    void NotAvailable()
+    {
+        toastService.ShowWarning("This feature is not available yet.");
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            //IJS.InvokeVoidAsync("ApplyListGrid");
+        }
+    }
+    async Task HitDownload(DriveFile file)
+    {
+        var log = FileStatSvc.InsertData(new FileStat() { CreatedDate = DateHelper.GetLocalTimeNow(), Name = file.Name, Size = file.Size, StatType = StatTypes.Download, UID = file.UID, Username = UserName });
+        NavMgr.NavigateTo(file.FileUrl,true);
+    }
+
+    async Task UploadFile()
+    {
+        var options = new MudBlazor.DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
+        var parameters = new DialogParameters { ["CustomHeader"]="Upload File", ["SelectedFolderUID"] = SelectedFolder.UID };
+        var dialog = DialogService.Show<UploadFileModal>("Upload File", parameters, options);
+        var result = await dialog.Result;
+        if (result.Data is not null)
+        {
+            LoadData();
+            GenerateTree();
+        }
+    }
+    async Task CreateFolder()
+    {
+        var options = new MudBlazor.DialogOptions { CloseOnEscapeKey = true, FullWidth = true };
+        var parameters = new DialogParameters { ["CustomHeader"] = "New Folder", ["ParentFolderUID"] = SelectedFolder.UID };
+        var dialog = DialogService.Show<AddNewFolder>("New Folder", parameters, options);
+        var result = await dialog.Result;
+        if (result.Data is not null)
+        {
+            LoadData();
+            GenerateTree();
+        }
+    }
+}

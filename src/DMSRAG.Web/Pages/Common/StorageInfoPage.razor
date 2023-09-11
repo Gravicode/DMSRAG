@@ -1,0 +1,64 @@
+﻿@inject StorageInfoService StorageSvc
+@inject AppState AppState
+@implements IDisposable
+@inject IToastService toastService
+
+<div class="sidebar-bottom">
+    <h4 class="mb-3"><i class="las la-cloud mr-2"></i>Storage</h4>
+    <p>
+        @if (MyStorage != null)
+        {
+            @($"{DriveHelper.GetSize(MyStorage.UsedSize)} / {DriveHelper.GetSize(MyStorage.TotalSize)} Used")
+        }
+    </p>
+    <div class="iq-progress-bar mb-3">
+        <span class="bg-primary iq-progress progress-1" data-percent="@((long)UsedPercent)">
+        </span>
+    </div>
+    <p> @UsedPercent.ToString("n2") % Full - @($"{DriveHelper.GetSize(MyStorage.TotalSize - MyStorage.UsedSize)}") Free</p>
+    <a href="#" @onclick="NotAvailable" @onclick:preventDefault class="btn btn-outline-primary view-more mt-4">Buy Storage</a>
+</div>
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+    double UsedPercent = 0;
+    StorageInfo MyStorage { set; get; } = new();
+
+    void NotAvailable()
+    {
+        toastService.ShowWarning("This feature is not available yet.");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            LoadData();
+
+        }
+        AppState.OnStorageChange += Refresh;
+
+    }
+
+    void LoadData()
+    {
+        MyStorage = StorageSvc.GetByUsername(UserName);
+        UsedPercent =  ((double)MyStorage.UsedSize / MyStorage.TotalSize * 100);
+    }
+    async void Refresh(string username)
+    {
+        if (UserName == username)
+        {
+            LoadData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    public void Dispose()
+    {
+        AppState.OnStorageChange -= Refresh;
+    }
+}

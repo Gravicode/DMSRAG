@@ -1,0 +1,325 @@
+﻿@page "/rag-chat"
+@using System.Web;
+@using Microsoft.SemanticMemory;
+@using Microsoft.SemanticMemory.DataFormats.Office;
+@using Microsoft.SemanticMemory.DataFormats.Pdf;
+@inject DriveService DriveSvc
+@inject AppState AppState
+@inject FileStatService FileStatSvc
+@inject DataBlobHelper DataBlobHelper
+@inject ISnackbar Snackbar
+
+<h3>Document Search (RAG)</h3>
+<MudGrid>
+    <MudItem xs="12" sm="12">
+
+        <MudPaper Class="pa-4 mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@IsLoading" DisableElevation="true" OnClick="IndexDocs">Index Docs</MudButton>
+        </MudPaper>
+    </MudItem>
+    @if (IsLoading)
+    {
+        <MudItem xs="12" sm="12">
+            <MudPaper Class="pa-4 mud-height-full">
+                <MudProgressCircular Color="Color.Success" Indeterminate="true" />
+                <MudText Typo="Typo.body1" Color="Color.Success">@Status</MudText>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+<MudGrid Justify="Justify.Center">
+    <MudItem id="answers" xs="12" Class="overflow-x-auto">
+        <MudStack Reverse="@IsReversed" Spacing="12">
+            @foreach (var item in Items)
+            {
+                <MudStack Justify="Justify.Center" AlignItems="AlignItems.Start" Spacing="4">
+                    <MudBadge Origin="Origin.TopLeft" Overlap="true" Color="Color.Secondary"
+                          Icon="@Icons.Material.Filled.QuestionMark" Class="d-flex align-self-end">
+                        <MudPaper Class="pa-6 d-flex flex-column" Elevation="3">
+                            <MudText Typo="Typo.body1" Align="Align.End">
+                                @item.Question
+                            </MudText>
+                            <MudText Typo="Typo.caption" Align="Align.End" Color="Color.Secondary">
+                                @($"Asked at {item.CreatedDate:h:mm:ss tt}")
+                            </MudText>
+                        </MudPaper>
+                    </MudBadge>
+                    <div class="ten-twelves">
+                        <MudBadge Origin="Origin.TopLeft" Overlap="true" Color="Color.Secondary"
+                              Icon="@Icons.Material.Filled.AutoAwesome">
+                            <MudGrid Justify="Justify.Center">
+                                <MudItem xs="12">
+                                    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true">
+                                        <MudTabPanel Icon="@Icons.Material.Filled.Quickreply" Text="Answer" ToolTip="Answer text">
+                                            <ChildContent>
+                                                <MudPaper Class="pa-6" Elevation="3">
+                                                    <MudText Typo="Typo.body1">
+                                                        @((MarkupString)item.Answer)
+                                                    </MudText>
+                                                    @if (item is { Sources.Count: > 0 })
+                                                    {
+                                                        <div class="pt-4">
+                                                            <MudText Typo="Typo.subtitle2" Class="pb-2">Citations:</MudText>
+                                                            @foreach (var citation in item.Sources)
+                                                            {
+                                                                var icon = citation.Source.EndsWith(".pdf")
+                                                                ? @Icons.Custom.FileFormats.FilePdf
+                                                                : null;
+                                                                <MudChip Variant="Variant.Text" Color="Color.Info"
+                                                             Icon="@icon" OnClick="@(_ => OnShowCitation(citation.Link))">
+                                                                    @citation.Source
+                                                                </MudChip>
+                                                            }
+                                                        </div>
+                                                    }
+
+                                                </MudPaper>
+                                            </ChildContent>
+                                        </MudTabPanel>
+                                    </MudTabs>
+                                </MudItem>
+                            </MudGrid>
+                        </MudBadge>
+                    </div>
+                </MudStack>
+            }
+        </MudStack>
+        @if (IsAnswering)
+        {
+            <div class="ten-twelves">
+
+                <MudBadge Origin="Origin.TopLeft" Overlap="true" Color="Color.Secondary"
+                      Icon="@Icons.Material.Filled.Lightbulb" Class="full-width">
+                    <MudPaper Class="pa-6" Elevation="3">
+                        <Loading />
+                    </MudPaper>
+                </MudBadge>
+            </div>
+
+        }
+
+    </MudItem>
+    <MudItem xs="12" Class="rounded">
+        <MudGrid>
+            <MudItem xs="12" lg="10">
+                <MudBadge id="toggle-mic" Origin="Origin.TopRight" Color="Color.Primary"
+                          Overlap=true Dot=false Bordered=false Icon="@Icons.Material.Filled.Mic"
+                          Style="width:100%; cursor:pointer;">
+                    <MudTextField @bind-Value="@_userQuestion" Label="Type your question here.."
+                                  Variant="Variant.Outlined" Adornment="Adornment.End"
+                                  AdornmentIcon="@Icons.Material.Filled.ChatBubble"
+                                  AdornmentColor="Color.Secondary" AutoFocus="true"
+                                  Placeholder="Type your question here.." Lines="3"
+                                  IconSize="Size.Large"
+                                  HelperText="Type your question here.." Immediate="true"
+                                  OnKeyUp="@OnKeyUpAsync" Clearable="true"
+                                  Counter="1_000" MaxLength="1_000" />
+                </MudBadge>
+            </MudItem>
+            <MudItem xs="0" lg="2" Class="d-flex align-self-center">
+                <MudGrid Justify="Justify.Center">
+                    <MudItem xs="9" Class="pa-2">
+                        <MudFab Color="Color.Secondary" Size="Size.Large"
+                                StartIcon=@Icons.Material.Filled.Send Class="full-width"
+                                Label="Chat" aria-label="Ask question button."
+                                OnClick="@OnAskClickedAsync"
+                                Disabled=@(IsLoading || IsAnswering || string.IsNullOrWhiteSpace(_userQuestion)) />
+                    </MudItem>
+                    <MudItem xs="3" Class="pa-2">
+                        <MudTooltip Arrow="true" Text="Clear chat history" Placement="Placement.Top">
+                            <MudFab Color="Color.Primary" Size="Size.Medium"
+                                    StartIcon=@Icons.Material.Filled.DeleteForever
+                                    aria-label="Clear chat."
+                                    OnClick="@OnClearChat" Disabled=@(IsLoading || IsAnswering) />
+                        </MudTooltip>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudScrollToTop Selector="#answers"
+                    VisibleCssClass="visible absolute"
+                    HiddenCssClass="invisible">
+        <MudFab Color="Color.Primary" IconSize="Size.Large" StartIcon="@Icons.Material.Filled.ArrowUpward" />
+    </MudScrollToTop>
+</MudGrid>
+@code {
+    string Status = string.Empty;
+    Drive MyDrive { set; get; }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+    bool IsAnswering = false;
+    bool HasIndexed = false;
+    public List<RAGItem> Items { get; set; } = new();
+    bool IsReversed = false;
+    bool IsLoading = false;
+    string _userQuestion;
+    Memory DocMemory;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            DriveSvc.InitDrive(UserName);
+            MyDrive = DriveSvc.MyDrive;
+        }
+        var (model, apiKey, orgId) = AppConstants.GetSettings();
+        var config = new OpenAIConfig() { EmbeddingModel = "text-embedding-ada-002", APIKey = apiKey, OrgId = orgId, TextModel = model, MaxRetries = 3 };
+
+        DocMemory = new Microsoft.SemanticMemory.MemoryClientBuilder()
+    .WithOpenAIDefaults(apiKey, orgId)
+    .BuildServerlessClient();
+
+
+    }
+    async Task LoadData()
+    {
+        if (IsLoading) return;
+        IsLoading = true;
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
+        DriveSvc.Refresh();
+        MyDrive = DriveSvc.MyDrive;
+
+        string FolderUid = MyDrive.RootFolder.UID;
+        var SelectedFolder = MyDrive.RootFolder;
+
+        if (SelectedFolder != null)
+        {
+            await IndexFolder(SelectedFolder);
+        }
+        Status = string.Empty;
+        IsLoading = false;
+    }
+
+    async Task IndexFolder(DriveFolder folder)
+    {
+        try
+        {
+            foreach (var file in folder.Files)
+            {
+                try
+                {
+                    var CurrentFile = DriveSvc.GetFileByUid(file.UID);
+                    var queryString = HttpUtility.ParseQueryString(CurrentFile.FileUrl);
+                    var fname = queryString[0];
+                    await Task.Delay(1);
+                    Status = $"indexing file: {CurrentFile.Name}";
+                    await InvokeAsync(StateHasChanged);
+                    var bytes = await DataBlobHelper.DownloadFile(fname);
+                    /*
+                    //import doc by extracting text from file
+                        var pathFile = TempFolder + CurrentFile.Name;
+
+                        File.WriteAllBytes(pathFile, bytes);
+                        var ext = Path.GetExtension(fname);
+                        var text = string.Empty;
+
+                        switch (ext.ToLower())
+                        {
+                        case ".doc":
+                        case ".docx":
+                        text = new MsWordDecoder().DocToText(pathFile);
+                        break;
+
+                        case ".pdf":
+                        text = new PdfDecoder().DocToText(pathFile);
+                    break;
+
+                    }
+                    await DocMemory.ImportTextAsync(text, documentId: CurrentFile.Name);
+                    */
+                    var tagcollection = new TagCollection();
+                    tagcollection.Add("user", UserName);
+                    tagcollection.Add("filename", CurrentFile.Name);
+                    var ms = new MemoryStream(bytes);
+                    await DocMemory.ImportDocumentAsync(ms, CurrentFile.Name, documentId: CurrentFile.Name, tagcollection);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("index fail:" + ex);
+                }
+
+
+            }
+            foreach (var subfolder in folder.Folders)
+            {
+                await IndexFolder(subfolder);
+            }
+        }
+        catch (Exception exg)
+        {
+            Console.WriteLine(exg);
+        }
+        finally
+        {
+
+            HasIndexed = true;
+        }
+        Snackbar.Add("Indexing is finished", Severity.Success);
+        Console.WriteLine("Indexing is finished");
+    }
+    async Task IndexDocs()
+    {
+        await LoadData();
+    }
+    async Task OnClearChat()
+    {
+        Items.Clear();
+    }
+    async Task OnShowCitation(string LinkUrl)
+    {
+
+    }
+
+    private async Task OnKeyUpAsync(KeyboardEventArgs args)
+    {
+        if (args is { Key: "Enter", ShiftKey: false })
+        {
+            await OnAskClickedAsync();
+        }
+    }
+    async Task OnAskClickedAsync()
+    {
+        if (IsLoading) return;
+        if (IsAnswering) return;       
+        if (!HasIndexed)
+        {
+            Snackbar.Add("Please index the docs first.", Severity.Warning);
+            return;
+
+        }
+        IsAnswering = true;
+        await Task.Delay(1);
+        try
+        {
+            var answer = await DocMemory.AskAsync(_userQuestion);
+            Console.WriteLine("Sources:\n");
+            var newItem = new RAGItem() { Answer = answer.Result, CreatedDate = DateHelper.GetLocalTimeNow(), Question = _userQuestion };
+            foreach (var x in answer.RelevantSources)
+            {
+                newItem.Sources.Add(new SourceItem() { Link = x.Link, Source = x.SourceName });
+                Console.WriteLine($"  - {x.SourceName}  - {x.Link} [{x.Partitions.First().LastUpdate:D}]");
+            }
+            Console.WriteLine($"Question: {_userQuestion}\n\nAnswer: {answer.Result}");
+            Items.Add(newItem);
+            _userQuestion = string.Empty;
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("error answer question:" + ex, Severity.Warning);
+            Console.WriteLine("error answer question:" + ex);
+
+        }
+        finally
+        {
+            IsAnswering = false;
+        }
+    }
+
+
+}

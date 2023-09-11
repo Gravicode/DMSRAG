@@ -1,0 +1,90 @@
+Menggambarkan dinamika dankinerja suatu bisnis dalam periodetertentu
+Untungdicapai ketika:
+Pendapatan> Biaya + Bahan Terpakai
+Rugiterjadi ketika:
+Pendapatan< Biaya + Bahan Terpakai (-) Persediaan Bahan
+yang TerpakaiContoh Laporan Laba / RugiUntung, Rugi dan Bangkrut
+Untung
+Air masuk lebih banyakdaripadaair keluar
+Rugi
+Air keluarlebih banyak daripadaair masuk
+Bangkrut
+Ketinggianair dalam bakhabisAnalisa finansialIstilah Penting(Laba / Rugi)
+REVENUE / OMSET / PENDAPATAN
+Nilai Total Transaksi
+COST OF GOOD SOLD (COGS) /
+HARGA POKOK PRODUKSI (HPP)
+Total Biayayg terkait langsung dgn
+Pembuatan Produk (biaya variable),
+termasuk pemakaian bahan
+GROSS PROFIT / UNTUNG KOTOR
+Keuntungan Penjualansebelum
+dikurangi oleh Biaya Tidak Langsung
+LABA OPRASIONAL /
+OPERATING PROFIT /
+EARNING BEFORE INTEREST & TAX
+Keuntungan yang diperoleh dari aktivitas
+utama perusahaan
+INDIRECT COST / BIAYA TDK LANGSUNG
+Biaya yang tidak terkait langsung dgn
+proses produksi. Di antaranya biaya
+distribusi, biaya pemasaran, biaya
+operasional, termasuk biaya Depresiasi
+Aset (Penyusutan nilai Aset)
+NET INCOME / BOTTOM LINE
+Keuntungan Bersih
+PAJAK & BUNGARasio Penting
+(B) REVENUE / OMSET
+/ PENDAPATAN
+COST OF GOOD
+SOLD (COGS) /
+HARGA POKOK
+PRODUKSI
+(HPP)
+(A) GROSS PROFIT /
+UNTUNG KOTOR
+LABA OPRASIONAL /
+OPERATING PROFIT /
+EARNING BEFORE
+INTEREST & TAX
+INDIRECT COST /
+BIAYA TDK
+LANGSUNG
+(C) NET INCOME /
+BOTTOM LINE
+PAJAK &
+BUNGA
+Gross Profit
+Margin (A/B) Rasio Variable
+Cost / Fixed
+Cost ++
+Net Profit
+Margin (C/B)Istilah Umum (Terkait Aset)
+(D) ASET /
+ASSET
+(A) UTANG /
+LIABILITY / DEBT
+Debt to
+Equity Ratio
+(A/B)
+(B) MODAL /
+EQUITY
+KAS / CASH PERSEDIAAN /
+INVENTORY
+PIUTANG /
+RECEIVABLE
+ASET TETAP
+/FIXED ASSET
+(C) ASET LANCAR
+/CURRENT ASSET
+Liquidity: Current
+Ratio (C/A)
+Debt to Asset
+Ratio (A/D)
+(E) NET INCOME
+Return on
+Asset (E/D)
+Return on
+Equity (E/B)
+Belanja Modal /
+Capital ExpenditureThank You

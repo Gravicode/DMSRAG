@@ -1,0 +1,168 @@
+{
+  "index": "default",
+  "document_id": "finance-startup.pdf",
+  "execution_id": "35a08fd63cb34a5b87e0502a0e2d9bf0",
+  "steps": [
+    "extract",
+    "partition",
+    "gen_embeddings",
+    "save_embeddings",
+    "summarize",
+    "gen_embeddings",
+    "save_embeddings"
+  ],
+  "remaining_steps": [],
+  "completed_steps": [
+    "extract",
+    "partition",
+    "gen_embeddings",
+    "save_embeddings",
+    "summarize",
+    "gen_embeddings",
+    "save_embeddings"
+  ],
+  "tags": {
+    "user": [
+      "mifmasterz@yahoo.com"
+    ],
+    "filename": [
+      "finance-startup.pdf"
+    ]
+  },
+  "creation": "2023-09-11T01:35:12.7948563+00:00",
+  "last_update": "2023-09-11T01:35:46.1205185+00:00",
+  "files": [
+    {
+      "id": "3abeb992c9e0481e8c1d776cd4c950ac",
+      "name": "finance-startup.pdf",
+      "size": 767062,
+      "mime_type": "application/pdf",
+      "artifact_type": "Undefined",
+      "processed_by": [
+        "extract"
+      ],
+      "generated_files": {
+        "finance-startup.pdf.extract.txt": {
+          "id": "06534cd1db29423fb61eccf829d5c8d6",
+          "name": "finance-startup.pdf.extract.txt",
+          "size": 7861,
+          "mime_type": "text/plain",
+          "artifact_type": "ExtractedText",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "",
+          "processed_by": [
+            "extract",
+            "partition",
+            "summarize"
+          ]
+        },
+        "finance-startup.pdf.partition.0.txt": {
+          "id": "aa7b50e020dd4669b836ce871d8c2f81",
+          "name": "finance-startup.pdf.partition.0.txt",
+          "size": 3171,
+          "mime_type": "text/plain",
+          "artifact_type": "TextPartition",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "7340a4575cb662a7b71571854c6ec39ff7a80e11a451a298d6b026346ccacc0c",
+          "processed_by": [
+            "partition",
+            "gen_embeddings"
+          ]
+        },
+        "finance-startup.pdf.partition.1.txt": {
+          "id": "78cb42fbe49c4de7a7e85c81b18ba6c2",
+          "name": "finance-startup.pdf.partition.1.txt",
+          "size": 3105,
+          "mime_type": "text/plain",
+          "artifact_type": "TextPartition",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "4d4a1f7c540c4577637f8e8b7b28071cd975f46712e561c9430b60ce984cf741",
+          "processed_by": [
+            "partition",
+            "gen_embeddings"
+          ]
+        },
+        "finance-startup.pdf.partition.2.txt": {
+          "id": "38a8252b5fa4467a9d2e387e8533d3ba",
+          "name": "finance-startup.pdf.partition.2.txt",
+          "size": 1884,
+          "mime_type": "text/plain",
+          "artifact_type": "TextPartition",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "6916cf4aff6194e3e1dacfbb43bdebf66f63bd2c7959a1c06e21ca636887745b",
+          "processed_by": [
+            "partition",
+            "gen_embeddings"
+          ]
+        },
+        "finance-startup.pdf.partition.0.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding": {
+          "id": "cc8c8883825342529f080957db2d828c",
+          "name": "finance-startup.pdf.partition.0.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding",
+          "size": 19661,
+          "mime_type": "float[]",
+          "artifact_type": "TextEmbeddingVector",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "",
+          "processed_by": [
+            "gen_embeddings",
+            "save_embeddings"
+          ]
+        },
+        "finance-startup.pdf.partition.1.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding": {
+          "id": "c8c3b122658b4aa7923038780e6abbb8",
+          "name": "finance-startup.pdf.partition.1.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding",
+          "size": 19641,
+          "mime_type": "float[]",
+          "artifact_type": "TextEmbeddingVector",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "",
+          "processed_by": [
+            "gen_embeddings",
+            "save_embeddings"
+          ]
+        },
+        "finance-startup.pdf.partition.2.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding": {
+          "id": "f38eefe5eaee4c7ab4dd883d828128dd",
+          "name": "finance-startup.pdf.partition.2.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding",
+          "size": 19654,
+          "mime_type": "float[]",
+          "artifact_type": "TextEmbeddingVector",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "",
+          "processed_by": [
+            "gen_embeddings",
+            "save_embeddings"
+          ]
+        },
+        "finance-startup.pdf.summarize.0.txt": {
+          "id": "180fdd3919504ac6b924cbfd1302dc48",
+          "name": "finance-startup.pdf.summarize.0.txt",
+          "size": 1200,
+          "mime_type": "text/plain",
+          "artifact_type": "SyntheticData",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "6968398d1bb53cac54f52b95a548d5bf3c0f1eef024ec82d592ce15a4dbe9c14",
+          "processed_by": [
+            "summarize",
+            "gen_embeddings"
+          ]
+        },
+        "finance-startup.pdf.summarize.0.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding": {
+          "id": "c7a7ccdf4dc14fe69c9f82e170a15d55",
+          "name": "finance-startup.pdf.summarize.0.txt.OpenAI.TextEmbedding.OpenAITextEmbeddingGeneration.TODO.text_embedding",
+          "size": 19652,
+          "mime_type": "float[]",
+          "artifact_type": "TextEmbeddingVector",
+          "parent_id": "3abeb992c9e0481e8c1d776cd4c950ac",
+          "content_sha256": "",
+          "processed_by": [
+            "gen_embeddings",
+            "save_embeddings"
+          ]
+        }
+      }
+    }
+  ],
+  "custom_data": {},
+  "previous_executions_to_purge": []
+}

@@ -1,0 +1,223 @@
+﻿@page "/master/UserProfile"
+
+@inject IJSRuntime jsRuntime
+@inject NavigationManager NavMgr
+@inject IToastService toastService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject UserProfileService service
+
+@inject UserProfileService Userservice
+@using System.IO
+
+<h1>Daftar UserProfile</h1>
+
+<p>Gunakan halaman ini untuk melihat info UserProfile.</p>
+
+@if (DataUserProfile == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <MudTable Context="item" Items="@DataUserProfile" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<UserProfile,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Data UserProfile</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+         
+            <MudTh>Nama</MudTh>
+            <MudTh>Telepon</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Alamat</MudTh>
+            <MudTh>Foto</MudTh>
+            <MudTh>Actions</MudTh>
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nama">@item.FullName</MudTd>
+            <MudTd DataLabel="Phone">@item.Phone</MudTd>
+            <MudTd DataLabel="Email">@item.Email</MudTd>
+            <MudTd DataLabel="Aktif">@(item.Aktif? "Ya":"Tidak")</MudTd>
+            <MudTd DataLabel="Alamat">@item.Address</MudTd>
+            <MudTd DataLabel="Foto">
+                    @if (string.IsNullOrEmpty(item.PicUrl))
+                {
+                    <p>Tidak ada foto</p>
+                }
+                else
+                {
+                    <MudImage Style="width: 150px; height: 150px;object-fit: cover;"  Src="@item?.PicUrl" Alt="foto"></MudImage>
+                 
+                }
+
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                @if (HasLogin)
+                {
+                    <MudButton ButtonType="ButtonType.Button" @onclick="(() => PrepareForEdit(item))" DisableElevation="true" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" Class="mr-2">Ubah</MudButton>
+                    <MudButton ButtonType="ButtonType.Button" @onclick="(() => PrepareForDelete(item))" DisableElevation="true" Variant="Variant.Filled" Size="Size.Small" Color="Color.Error" Class="mr-2">Hapus</MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+
+    <div class="d-flex flex-wrap mt-4">
+        <MudSwitch @bind-Checked="@hover" Color="Color.Primary">Hover</MudSwitch>
+        <MudSwitch @bind-Checked="@dense" Color="Color.Secondary">Dense</MudSwitch>
+        <MudSwitch @bind-Checked="@striped" Color="Color.Tertiary">Striped</MudSwitch>
+        <MudSwitch @bind-Checked="@bordered" Color="Color.Warning">Bordered</MudSwitch>
+    </div>
+
+
+}
+@if (HasLogin)
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudButton ButtonType="ButtonType.Button" @onclick="(() => InitializeitemObject())" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Masukan UserProfile Baru</MudButton>
+    </MudPaper>
+}
+
+@code {
+    bool HasLogin = false;
+    UserProfileDetail detail;
+   
+    string customHeader = string.Empty;
+    List<UserProfile> DataUserProfile;
+    UserProfile itemObject = new UserProfile();
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = false;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private UserProfile selectedItem1 = null;
+
+    private HashSet<UserProfile> selectedItems = new HashSet<UserProfile>();
+
+    private bool FilterFunc1(UserProfile element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(UserProfile element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+      
+        if (element.Address.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.KTP.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    async Task DownloadFile(string Url)
+    {
+        if (!string.IsNullOrEmpty(Url))
+        {
+            NavMgr.NavigateTo(Url, true);
+        }
+        else
+        {
+            toastService.ShowError("Url kosong atau tidak valid.");
+        }
+    }
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+
+       
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            HasLogin = true;// Userservice.GetUserRole(UserName) == Roles.Admin;
+        }
+
+        
+
+        DataUserProfile = service.GetAllData();
+
+
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+        }
+    }
+
+    private async Task InitializeitemObject()
+    {
+
+        itemObject = new UserProfile();
+
+        customHeader = "Masukan UserProfile Baru";
+
+        var action = new Action(DataChanged);
+        var parameters = new DialogParameters { ["TaskObject"] = itemObject, ["CustomHeader"] = customHeader, ["DataChanged"] = action };
+
+        var dialog = DialogService.Show<UserProfileDetail>(customHeader, parameters);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+            long.TryParse(result.Data.ToString(), out var NewId);
+        }
+    }
+    private async void DataChanged()
+    {
+        DataUserProfile = service.GetAllData();
+        StateHasChanged();
+    }
+
+    private async Task PrepareForEdit(UserProfile item)
+    {
+        customHeader = "Ubah Data UserProfile";
+        itemObject = item;
+        var action = new Action(DataChanged);
+        var parameters = new DialogParameters { ["TaskObject"] = itemObject, ["CustomHeader"] = customHeader, ["DataChanged"] = action };
+
+        var dialog = DialogService.Show<UserProfileDetail>(customHeader, parameters);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+            long.TryParse(result.Data.ToString(), out var NewId);
+        }
+
+    }
+    private async Task PrepareForDelete(UserProfile item)
+    {
+        itemObject = item;
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<ConfirmDialog>("Konfirmasi", options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var task = service.DeleteData(itemObject);
+            //await jsRuntime.InvokeAsync<object>("CloseModal", "confirmDeleteModal");
+            DataUserProfile = service.GetAllData();
+            itemObject = new UserProfile() { Id = "" };
+        }
+    }
+   
+   
+
+}
+

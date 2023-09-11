@@ -1,0 +1,55 @@
+﻿@using PSC.Blazor.Components.BrowserDetect;
+@inject UserProfileService UserSvc
+@inject PageViewService PageSvc
+@inject NavigationManager NavMgr
+@implements IDisposable
+<BrowserDetect @bind-BrowserInfo="@Info" />
+@code {
+    public BrowserInfo Info { get; set; }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string Username;
+    UserProfile selUser;
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Username = user.Identity.Name;
+            selUser = UserSvc.GetItemByUsername(Username);
+
+        }
+
+        NavMgr.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (Info != null)
+        {
+            var pageName = NavMgr.ToBaseRelativePath(NavMgr.Uri);
+            var newHit = new PageView() { Agent = Info.UserAgent, HitDate = DateHelper.GetLocalTimeNow(), PageName = pageName, PageUrl = NavMgr.Uri };
+            if (selUser != null)
+            {
+                newHit.User = selUser;
+            }
+            var res = PageSvc.InsertData(newHit);
+        }
+        //Logger.LogInformation("URL of new location: {Location}", e.Location);
+    }
+
+    public void Dispose()
+    {
+        NavMgr.LocationChanged -= HandleLocationChanged;
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+
+        }
+    }
+}

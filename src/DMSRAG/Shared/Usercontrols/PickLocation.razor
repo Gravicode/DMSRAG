@@ -1,0 +1,142 @@
+﻿@inject IJSRuntime jsRuntime
+@using System.IO
+@inject IToastService toastService
+@using GoogleMapsComponents
+@using GoogleMapsComponents.Maps
+
+<div class="modal" tabindex="-1" role="dialog" id="locationModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@CustomHeader</h5>
+
+
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form">
+                    <div class="form-group">
+                        <label>Alamat</label>
+                        <input type="text" @bind="Address" class="form-control" id="alamat1" aria-describedby="emailHelp" placeholder="ketik alamat untuk cari">
+                        <small id="emailHelp" class="form-text text-muted">Cari titik lokasi berdasarkan alamat.</small>
+                    </div>
+                    <div class="note">Cari titik lokasi berdasarkan alamat.</div>
+                    <div class="form-group right">
+
+                        <button type="button" @onclick="Cari" class="btn btn-primary">Cari</button>
+                        <button type="button" @onclick="SelectLocation" class="btn btn-success">Pilih</button>
+                        <button type="button" class="btn btn-info" data-dismiss="modal">Batal</button>
+                    </div>
+                    <div class="form-group">
+                        <GoogleMap @ref="@map1" Id="map1" Options="@mapOptions" Height="600" OnAfterInit="@(async () => await OnAfterInitAsync())"></GoogleMap>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public RenderFragment CustomHeader { get; set; }
+    [Parameter]
+    public GeoLocation SelectedLocation { get; set; }
+    [Parameter]
+    public Action DataChanged { get; set; }
+    public string Address { get; set; }
+    private GoogleMap map1;
+    private MapOptions mapOptions;
+    private DirectionsRenderer dirRend;
+    public Marker marker { get; set; }
+    async Task Cari()
+    {
+        if (!string.IsNullOrEmpty(Address))
+        {
+            var sel = GeoHelpers.GetLocationFromAddress(Address);
+            if (sel.lat != 0 && sel.lon != 0)
+            {
+                SelectedLocation.Latitude = sel.lat;
+                SelectedLocation.Longitude = sel.lon;
+                mapOptions.Center.Lat = SelectedLocation.Latitude;
+                mapOptions.Center.Lng = SelectedLocation.Longitude;
+                var newCenter = new LatLngLiteral() { Lat = SelectedLocation.Latitude, Lng = SelectedLocation.Longitude };
+                await map1.InteropObject.SetCenter(newCenter);
+                await MoveCursor(new PolyMouseEvent() { LatLng = newCenter });
+
+            }
+            else
+            {
+                toastService.ShowInfo("tidak ditemukan alamat di map");
+            }
+        }
+
+    }
+
+    protected override void OnInitialized()
+    {
+        if (SelectedLocation == null)
+        {
+            SelectedLocation = new GeoLocation() { Latitude = -6.595038, Longitude = 106.816635 };
+
+
+        }
+        mapOptions = new MapOptions()
+        {
+            Zoom = 13,
+            Center = new LatLngLiteral()
+            {
+                Lat = SelectedLocation.Latitude,
+                Lng = SelectedLocation.Longitude
+            },
+            MapTypeId = MapTypeId.Roadmap
+        };
+
+    }
+
+
+
+    private async Task OnAfterInitAsync()
+    {
+        //Create instance of DirectionRenderer
+        dirRend = await DirectionsRenderer.CreateAsync(map1.JsRuntime, new DirectionsRendererOptions()
+        {
+            Map = map1.InteropObject
+        });
+        if (SelectedLocation != null && marker == null)
+        {
+            marker = await Marker.CreateAsync(jsRuntime);
+            await marker.SetPosition(new LatLngLiteral() { Lat = SelectedLocation.Latitude, Lng = SelectedLocation.Longitude });
+            await marker.SetMap(map1.InteropObject);
+            //await marker.AddListener<MouseEvent>("click", async (x) => await showInfo(x, item.No));
+
+        }
+        await map1.InteropObject.AddListener<PolyMouseEvent>("click", async (x) => { await MoveCursor(x); });
+    }
+    async Task MoveCursor(PolyMouseEvent e)
+    {
+        if (marker != null)
+        {
+            await marker.SetPosition(e.LatLng);
+            SelectedLocation.Latitude = e.LatLng.Lat;
+            SelectedLocation.Longitude = e.LatLng.Lng;
+
+        }
+    }
+
+    private async void SelectLocation()
+    {
+        await CloseTaskModal();
+        DataChanged?.Invoke();
+    }
+
+
+    private async Task CloseTaskModal()
+    {
+        await jsRuntime.InvokeAsync<object>("CloseModal", "locationModal");
+    }
+
+
+}

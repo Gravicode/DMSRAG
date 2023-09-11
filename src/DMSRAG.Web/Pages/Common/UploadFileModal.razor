@@ -1,0 +1,243 @@
+﻿@inject IJSRuntime IJS
+@inject DataBlobHelper DataBlobHelper;
+@inject DriveService DriveSvc
+@inject UserProfileService UserSvc
+@inject StorageInfoService StorageSvc
+@inject FileStatService FileStatSvc
+@using System.IO
+@inject AppState AppState
+
+@using Severity = MudBlazor.Severity;
+@inject ISnackbar Snackbar
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-3 mb-n1" />
+            @CustomHeader
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudCard>
+            <MudForm Model="@model" @ref="@form">
+                <MudCardContent>
+                    <MudTextField @bind-Value="model.Name"
+                                  For="@(() => model.Name)"
+                                  Immediate="true"
+                                  Label="Name" />
+                    <MudFileUpload Accept=".jpg,.png,.jpeg,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.mp3,.mp4,.avi" T="IBrowserFile" For="@(() => model.File)" @bind-Files="model.File" OnFilesChanged="UploadFiles">
+                        <ButtonTemplate>
+                            <MudButton HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       for="@context">
+                                Upload Files
+                            </MudButton>
+                        </ButtonTemplate>
+                    </MudFileUpload>
+                </MudCardContent>
+            </MudForm>
+        </MudCard>
+    </DialogContent>
+    <DialogActions>
+        <MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" OnClick="Submit" Color="Color.Primary" Size="@Size.Small" StartIcon="@Icons.Material.Filled.Save" Class="mr-1 mt-1">Simpan</MudButton>
+
+        @* <MudButton ButtonType="MudBlazor.ButtonType.Button" OnClick="PrintReport" Variant="Variant.Filled" Color="Color.Primary" Size="@Size.Small" StartIcon="@Icons.Material.Filled.Print" Class="mr-1 mt-1">Print</MudButton>*@
+
+        <MudButton ButtonType="MudBlazor.ButtonType.Button" OnClick="Cancel" Variant="Variant.Filled" Color="Color.Secondary" Size="@Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mr-1 mt-1">Kembali</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    async Task Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    public string FileUrl { get; set; }
+    [Parameter]
+    public string CustomHeader { get; set; } = "Upload Files";
+
+    public List<DriveFile> UploadedFiles { get; set; } = new();
+
+    public DriveFolder SelectedFolder { get; set; } = new();
+    [Parameter]
+    public string SelectedFolderUID { get; set; }
+
+    [Parameter]
+    public Action DataChanged { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+
+    Drive MyDrive { set; get; }
+    StorageInfo MyStorage { set; get; }
+    UserProfile SelUser { set; get; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            SelUser = UserSvc.GetItemByUsername(UserName);
+        }
+        LoadData();
+
+    }
+    void LoadData()
+    {
+        DriveSvc.InitDrive(UserName);
+        MyDrive = DriveSvc.MyDrive;
+        if (!string.IsNullOrEmpty(SelectedFolderUID))
+        {
+            SelectedFolder = DriveSvc.GetFolderByUid(SelectedFolderUID);
+        }else
+        if (MyDrive.RootFolder.Folders.Count > 0)
+        {
+            SelectedFolder = MyDrive.RootFolder.Folders[0];
+            SelectedFolderUID = SelectedFolder.UID;
+        }
+
+    }
+    public void Reset()
+    {
+        FileUrl = string.Empty;
+        SelectedFolder = null;
+        LoadData();
+        UploadedFiles.Clear();
+        CustomHeader = "Upload Files";
+        StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            var ErrorMsg = string.Empty;
+            if (SelectedFolder == null)
+            {
+                ErrorMsg += "Please select folder first. ";
+            }
+            if (UploadedFiles.Count <= 0)
+            {
+                ErrorMsg += "Please select file first. ";
+            }
+            if (ErrorMsg.Length > 0)
+            {
+                Snackbar.Add(ErrorMsg, Severity.Warning);
+       
+                return;
+            }
+
+            foreach (var file in UploadedFiles)
+            {
+                SelectedFolder.Files.Add(file);
+                var log = FileStatSvc.InsertData(new FileStat() { CreatedDate = DateHelper.GetLocalTimeNow(), Name = model.Name, Size = file.Size, StatType = StatTypes.Upload, UID = file.UID, Username = UserName });
+            }
+            DriveSvc.Save();
+            var used = DriveSvc.GetUsedSize();
+            MyStorage = StorageSvc.GetByUsername(UserName);
+            MyStorage.UsedSize = used;
+            var res = StorageSvc.UpdateData(MyStorage);
+            MudDialog.Close(DialogResult.Ok(true));
+            DataChanged?.Invoke();
+            Snackbar.Add("Files saved.", Severity.Success);
+
+            AppState.RefreshFolder(SelectedFolderUID);
+            AppState.RefreshStorage(UserName);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            Snackbar.Add("error occured: " + ex, Severity.Warning);
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+    private MudForm form;
+    private FileModel model = new();
+
+
+    private async Task UploadFiles(InputFileChangeEventArgs e)
+    {
+        //If SuppressOnChangeWhenInvalid is false, perform your validations here
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        Snackbar.Add($"This file has the extension {model.File.Name.Split(".").Last()}", Severity.Info);
+        var ErrorMsg = string.Empty;
+        if (SelectedFolder == null)
+        {
+            ErrorMsg += "Please select folder first. ";
+        }
+
+        if (ErrorMsg.Length > 0)
+        {
+            Snackbar.Add(ErrorMsg, Severity.Warning);
+            
+            return;
+        }
+        foreach (var file in e.GetMultipleFiles(e.FileCount))
+        {
+
+            //var file = e.File;
+            if (file != null)
+            {
+                var ms = new MemoryStream();
+                await file.OpenReadStream(AppConstants.MaxAllowedFileSize).CopyToAsync(ms);
+                var bytes = ms.ToArray();
+                //SKiaImageHelper.FixedSize(ms, 900, 500, false);
+                string newName = string.Empty;
+
+                newName = $"upload_{SelectedFolder.Name}_{UserName}_{DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss")}_{file.Name}";
+                FileUrl = $"{AppConstants.UploadUrlPrefix}{newName}";
+                await DataBlobHelper.UploadFile(newName, bytes);
+                var newFile = new DriveFile()
+                    {
+                        CreatedDate = DateHelper.GetLocalTimeNow(),
+                        Extension = Path.GetExtension(file.Name),
+                        Favorite = false,
+                        FileType = FileTypes.GetFileType(file.Name),
+                        FileUrl = FileUrl,
+                        ParentFolderUid = SelectedFolder.UID,
+                        Name = file.Name,
+                        Path = $"/{SelectedFolder.Name}/{file.Name}",
+                        Size = file.Size,
+                        UID = UIDHelper.CreateNewUID(),
+                        UpdatedDate =
+                            DateHelper.GetLocalTimeNow(),
+                        Owner = SelUser.FullName
+                    };
+                model.Name = newFile.Name;
+                UploadedFiles.Add(newFile);
+
+            }
+        }
+        //TODO upload the files to the server
+    }
+
+    //private async Task Submit()
+    //{
+    //    await form.Validate();
+
+    //    if (form.IsValid)
+    //    {
+    //        Snackbar.Add("Submited!");
+    //    }
+    //}
+
+  
+
+
+
+}

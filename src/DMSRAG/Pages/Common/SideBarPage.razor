@@ -1,0 +1,157 @@
+﻿@inject IJSRuntime IJS
+@inject IToastService toastService
+@inject AppState AppState
+@inject DriveService DriveSvc
+@implements IDisposable
+<div class="iq-sidebar  sidebar-default ">
+    <div class="iq-sidebar-logo d-flex align-items-center justify-content-between">
+        <a href="/" class="header-logo">
+            <img src="/assets/images/logo.png" class="img-fluid rounded-normal light-logo" alt="logo">
+            <img src="/assets/images/logo-white.png" class="img-fluid rounded-normal darkmode-logo d-none" alt="logo">
+        </a>
+        <div class="iq-menu-bt-sidebar">
+            <i class="las la-bars wrapper-menu"></i>
+        </div>
+    </div>
+    <div class="data-scrollbar" data-scroll="1">
+        <div class="new-create select-dropdown input-prepend input-append">
+            <div class="btn-group">
+                <label data-toggle="dropdown">
+                    <div class="search-query selet-caption"><i class="las la-plus pr-2"></i>Create New</div><span class="search-replace"></span>
+                    <span class="caret"><!--icon--></span>
+                </label>
+                <ul class="dropdown-menu">
+                    <li @onclick="()=>CreateNew(NewCommands.CreateFolder)"><div class="item"><i class="ri-folder-add-line pr-3"></i>New Folder</div></li>
+                    <li @onclick="()=>CreateNew(NewCommands.UploadFiles)" ><div class="item"><i class="ri-file-upload-line pr-3"></i>Upload Files</div></li>
+                    <li @onclick="()=>CreateNew(NewCommands.UploadFolder)"><div class="item"><i class="ri-folder-upload-line pr-3"></i>Upload Folders</div></li>
+                </ul>
+            </div>
+        </div>
+        <nav class="iq-sidebar-menu">
+            <ul id="iq-sidebar-toggle" class="iq-menu">
+                <li class="active">
+                    <a href="/index" class="">
+                        <i class="las la-home iq-arrow-left"></i><span>Dashboard</span>
+                    </a>
+                    <ul id="dashboard" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                    </ul>
+                </li>
+                <li class=" ">
+                    <a href="#mydrive" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                        <i class="las la-hdd"></i><span>My Drive</span>
+                        <i class="las la-angle-right iq-arrow-right arrow-active"></i>
+                        <i class="las la-angle-down iq-arrow-right arrow-hover"></i>
+                    </a>
+                    <ul id="mydrive" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                       @if(MyDrive!=null)
+                       foreach(var folder in MyDrive.RootFolder.Folders.Where(x=>!x.IsDeleted)){
+                        <li class=" ">
+                            <a href="@($"/browse-folder/{folder.UID}")">
+                                <i class="las la-icons"></i><span>@folder.Name</span>
+                            </a>
+                        </li>
+                       }
+                       
+                    </ul>
+                </li>
+                <li class=" ">
+                    <a href="/browse-all" class="">
+                        <i class="lar la-file-alt iq-arrow-left"></i><span>Files</span>
+                    </a>
+                    <ul id="page-files" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                    </ul>
+                </li>
+                <li class=" ">
+                    <a href="/recents" class="">
+                        <i class="las la-stopwatch iq-arrow-left"></i><span>Recent</span>
+                    </a>
+                    <ul id="page-folders" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                    </ul>
+                </li>
+                <li class=" ">
+                    <a href="/favorite" class="">
+                        <i class="lar la-star"></i><span>Favourite</span>
+                    </a>
+                    <ul id="page-fevourite" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                    </ul>
+                </li>
+                <li class=" ">
+                    <a href="/trash" class="">
+                        <i class="las la-trash-alt iq-arrow-left"></i><span>Trash</span>
+                    </a>
+                    <ul id="page-delete" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                    </ul>
+                </li>
+              
+            </ul>
+        </nav>
+       <StorageInfoPage></StorageInfoPage>
+        <div class="p-3"></div>
+    </div>
+</div>
+@code {
+    [CascadingParameter]
+    public MainLayout Layout { get; set; }
+    async void Refresh(string username)
+    {
+        if (UserName == username)
+        {
+            LoadData();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+
+    Drive MyDrive { set; get; }
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            DriveSvc.InitDrive(UserName);
+            MyDrive = DriveSvc.MyDrive;
+        }
+        AppState.OnDriveChange += Refresh;
+
+    }
+    void LoadData()
+    {
+        DriveSvc.Refresh();
+        MyDrive = DriveSvc.MyDrive;
+    }
+    public void Dispose()
+    {
+        AppState.OnDriveChange -= Refresh;
+    }
+    async Task CreateNew(string Command)
+    {
+        switch (Command)
+        {
+            case NewCommands.CreateFolder:
+                await IJS.InvokeVoidAsync("ShowModal", "newFolderModal");
+                //Layout.ResetAddNewFolder();
+                break;
+            case NewCommands.UploadFolder:
+                NotAvailable();    
+                //await IJS.InvokeVoidAsync("ShowModal", "uploadFolderModal");
+                break;
+            case NewCommands.UploadFiles:
+                await IJS.InvokeVoidAsync("ShowModal", "uploadFileModal");
+                //Layout.ResetUploadFile();
+
+                break;
+            default:
+                break;
+        }
+    }
+
+    void NotAvailable()
+    {
+        toastService.ShowWarning("This feature is not available right now.");
+    }
+}

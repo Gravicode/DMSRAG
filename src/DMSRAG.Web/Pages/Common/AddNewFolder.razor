@@ -1,0 +1,140 @@
+﻿@inject IToastService toastService
+@inject DataBlobHelper DataBlobHelper;
+@inject DriveService DriveSvc
+@inject AppState AppState
+@inject ISnackbar Snackbar
+<MudDialog>    
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+            <MudTextField T="string" Label="Folder Name" @bind-Value="TaskObject.Name" Required="true" RequiredError="Folder Name is required!" />
+            <MudTextField T="string" Label="Folder Desc" @bind-Value="TaskObject.Desc" Required="true" RequiredError="Desc is required!" />           
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Size="@Size.Small"  OnClick="Cancel">Cancel</MudButton>
+        <MudButton Size="@Size.Small" Color="Color.Primary" OnClick="HandleValidSubmit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+    bool success;
+    string[] errors = { };
+    MudForm form;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+    public string FileUrl { get; set; }
+    [Parameter]
+    public string CustomHeader { get; set; } = "Create New/Edit Folder";
+    [Parameter]
+    public DriveFolder TaskObject { get; set; } = new();
+    [Parameter]
+    public string ParentFolderUID { get; set; } 
+    [Parameter]
+    public Action DataChanged { get; set; }
+
+    Drive MyDrive { set; get; }
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            DriveSvc.InitDrive(UserName);
+            MyDrive = DriveSvc.MyDrive;
+        }
+
+
+    }
+
+    public void Reset()
+    {
+        TaskObject = new();
+        StateHasChanged();
+    }
+
+    public async Task SetFolder(DriveFolder folder)
+    {
+        TaskObject = folder;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            bool RefreshFolder = false;
+            DriveFolder ChangeItem;
+            var ErrorMsg = string.Empty;
+            if (string.IsNullOrEmpty(TaskObject.Name))
+            {
+                ErrorMsg += "Please type folder name. ";
+            }
+            if (string.IsNullOrEmpty(TaskObject.Desc))
+            {
+                ErrorMsg += "Please type folder description. ";
+            }
+            if (ErrorMsg.Length > 0)
+            {
+                Snackbar.Add(ErrorMsg, Severity.Warning);
+
+                return;
+            }
+            if (string.IsNullOrEmpty(TaskObject.UID))
+            {
+                TaskObject.UID = UIDHelper.CreateNewUID();
+                TaskObject.CreatedDate = DateHelper.GetLocalTimeNow();
+                TaskObject.Files = new();
+                TaskObject.Folders = new();
+                TaskObject.IsRoot = false;
+                TaskObject.Path = "/" + TaskObject.Name;
+                TaskObject.Size = 0;
+                TaskObject.UpdatedDate = DateHelper.GetLocalTimeNow();
+                if (!string.IsNullOrEmpty(ParentFolderUID))
+                {
+                    var parent = DriveSvc.GetFolderByUid(ParentFolderUID);
+                    parent.Folders.Add(TaskObject);
+                }else
+                    MyDrive.RootFolder.Folders.Add(TaskObject);
+            }
+            else
+            {
+                ChangeItem = DriveSvc.GetFolderByUid(TaskObject.UID);
+                ChangeItem.UpdatedDate = DateHelper.GetLocalTimeNow();
+                ChangeItem.Name = TaskObject.Name;
+                ChangeItem.Desc = TaskObject.Desc;
+                RefreshFolder = true;
+            }
+           
+            DriveSvc.Save();
+            
+            MudDialog.Close(DialogResult.Ok(true));
+            DataChanged?.Invoke();
+            Snackbar.Add("Folder saved.", Severity.Success);
+            
+            AppState.RefreshDrive(UserName);
+            if(RefreshFolder)
+                AppState.RefreshFolder(TaskObject.UID);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            Snackbar.Add("error occured: " + ex, Severity.Warning);
+          
+        }
+
+    }
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    
+    void Cancel() => MudDialog.Cancel();
+
+    [Parameter]
+    public EventCallback<bool> OnClick { get; set; }
+
+}

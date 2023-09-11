@@ -1,0 +1,63 @@
+﻿<div class="@CssClass" data-rating="@(Rating).0">
+    @foreach (var x in ratings)
+    {
+        <span @onclick="()=>PickRating(x+1)" class="star"></span>        
+    }
+</div>
+@code {
+    int[] ratings = new int[] { 0, 1, 2, 3, 4 };
+    //int? RatingKosong = 0;
+    //int? _rating=0;
+    [Parameter]
+    public int? Rating { get; set; }
+
+    [Parameter]
+    public Action<int> RatingPicked { get; set; }
+    //public int? Rating { get { return _rating; } set { _rating = value; RatingKosong = 5 - _rating; } }
+
+    private bool _IsEditable;
+
+    [Parameter]
+    public string CssClass { get; set; } = "star-rating";
+
+    [Parameter]
+    public bool IsEditable
+    {
+        get => _IsEditable;
+        set
+        {
+            if (_IsEditable == value) return;
+            _IsEditable = value;
+            IsEditableChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<bool> IsEditableChanged { get; set; }
+
+    async Task PickRating(int Rate)
+    {
+        if (!IsEditable) return;
+        Rating = Rate;
+        RatingPicked?.Invoke(Rate);
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        SetRating();
+    }
+
+    void SetRating()
+    {
+        var lst = new List<int>();
+        for (var i = 0; i < Rating; i++)
+        {
+            lst.Add(i);
+        }
+        ratings = lst.ToArray();
+    }
+    protected override void OnParametersSet()
+    {
+        SetRating();
+    }
+}

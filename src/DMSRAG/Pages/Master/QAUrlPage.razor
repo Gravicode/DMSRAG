@@ -1,0 +1,158 @@
+﻿@page "/QAUrl"
+@page "/QAUrl/{FileUID}"
+@using System.Web;
+@inject QAUrlService service
+@inject IJSRuntime jsRuntime
+@inject ISnackbar Snackbar
+
+@inject AzureBlobHelper AzureBlobHelper
+@inject UserProfileService UserSvc
+@inject DriveService DriveSvc
+@inject AppState AppState
+@inject FileStatService FileStatSvc
+
+<h1>Chat with Document: @CurrentFile?.Name</h1>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="form">
+                <MudTextField @ref="inputText" T="string" Label="Question" Required="true" @bind-Value="Input" RequiredError="Enter question!" />
+            </MudForm>
+        </MudPaper>
+        <MudPaper Class="pa-4 mt-4">
+            <MudButton Variant="Variant.Filled" Disabled="@service.IsProcessing" Color="Color.Primary" DisableElevation="true" OnClick="Process">Ask Question</MudButton>
+            <MudButton Variant="Variant.Filled" Disabled="@service.IsProcessing" Color="Color.Secondary" DisableElevation="true" OnClick="CopyClipboard" Class="mx-2">Copy to Clipboard</MudButton>
+            <MudButton Variant="Variant.Filled" Disabled="@service.IsProcessing" DisableElevation="true" OnClick="Clear">Clear</MudButton>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudText Typo="Typo.subtitle2">Page Index Count: <b>@service.ContentCount</b></MudText>
+                @foreach (var result in Result)
+            {
+                <MudText Color="@Color.Primary">@result</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+@if (service.IsProcessing)
+{
+    <MudProgressCircular Color="Color.Primary" Class="mt-2" Indeterminate="true" />
+}
+@code {
+    MudForm form;
+    [CascadingParameter(Name = "ToggleToggleNavMenu")]
+    protected Action? ToggleToggleNavMenu { get; set; }
+    string UserName;
+
+    public string Url { get; set; } = "https://id.wikipedia.org/wiki/Microsoft_Windows";
+    public string Input { get; set; }
+    public List<string> Result { get; set; } = new();
+    Drive MyDrive { set; get; }
+    DriveFile CurrentFile { set; get; }
+    [Parameter]
+    public string FileUID { get; set; }
+    HttpClient client;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    MudTextField<string> inputText;
+    protected override async Task OnInitializedAsync()
+    {
+        client = new();
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            DriveSvc.InitDrive(UserName);
+            MyDrive = DriveSvc.MyDrive;
+        }
+        await LoadFile();
+    }
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await Process();
+        }
+    }
+    async Task OpenFileUpload()
+    {
+        await jsRuntime.InvokeVoidAsync("OpenUpload", "fileInput1");
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+        }
+    }
+
+    async Task Clear()
+    {
+        Input = string.Empty;
+        Result = new();
+    }
+    HttpClient http;
+    int maxFileSize = 1024 * 50000;
+    private async Task LoadFile()
+    {
+        if (string.IsNullOrEmpty(FileUID))
+        {
+            Snackbar.Add("No file is selected", Severity.Warning);
+            return;
+        }
+        CurrentFile = DriveSvc.GetFileByUid(FileUID);
+        if (service.IsProcessing) return;
+        service.IsProcessing = true;
+        await Task.Delay(1);
+
+        try
+        {
+            var queryString = HttpUtility.ParseQueryString(CurrentFile.FileUrl);
+            var fname = queryString[0];
+            var bytes = await AzureBlobHelper.DownloadFile(fname);
+            var ms = new MemoryStream(bytes);
+            var contents = PdfHelper.GetTextPerPageFromPdf(ms);
+            foreach (var content in contents)
+            {
+                if (!string.IsNullOrEmpty(content))
+                {
+                    await service.AddContent(CurrentFile.Name, content);
+                    await Task.Delay(1);
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            var msg = string.Format("File: {Filename} Error: {Error}", CurrentFile.Name, ex.Message);
+            Console.WriteLine(msg);
+            Snackbar.Add(msg, Severity.Warning);
+
+        }
+        finally
+        {
+            service.IsProcessing = false;
+        }
+    }
+
+    async Task CopyClipboard()
+    {
+        var last = Result.Last();
+        if (!string.IsNullOrEmpty(last))
+            await Clipboard.SetTextAsync(last);
+    }
+    private async Task Process()
+    {
+        var res = await service.Answer(Input);
+        if (!string.IsNullOrEmpty(res))
+        {
+            Result.Add($"{Result.Count+1}. {Input} => {res}");
+            Input = string.Empty;
+            await inputText.FocusAsync();
+        }
+    }
+}

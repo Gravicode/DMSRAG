@@ -1,0 +1,320 @@
+FINANCE FOR STARTUPFungsi Pencatatan & Laporan Keuangan
+Audit
+• Apakah
+perusahaan
+sudah
+DIKELOLA
+sebagaimana
+mestinya?
+Analisis
+• Apakah
+perusahaan
+sudah
+memiliki
+KINERJA
+yang baik?
+• Opsi apa utk
+memperbaiki
+kinerja?
+Proyeksi
+• Berdasarkan
+data historis,
+bagaimana
+PERKIRAAN
+KINERJA
+perusahaan
+di masa
+datang?
+Valuasi
+• Apabilaakan
+dijual,
+berapakah
+NILAI yang
+layak utk
+perusahaan
+ini?PENCATATAN & PELAPORAN
+KEUANGANMENGAPA AKUNTANSI PENTING
+AKUNTING = Bahasa Bisnis
+mendukung pengambilan keputusan bisnisberdasarkan kondisi perusahaan yang
+telah dimodelkansecarafinansialFunsi Accounting mirip dengan Dashboard pada Kendaraan:
+Menampilkan informasi penting bagi Pengemudi dalam mengendalikan KendaraanVisualisasi Keuangan Perusahaan
+ASET BERTAMBAH:
+Setoran Modal, Pendapatan
+Usaha, Penambahan Hutang
+ASET BERKURANG:
+Biaya, Penarikan Modal,
+Pembayaran Hutang
+ASET PERUSAHAAN:
+Disimpan & Berubah Wujud antara:
+Kas, Aset Tetap, Persediaan, PiutangAKTIVA PASIVA
+Harta yang dikelola oleh Perusahaan
+untuk mencetak Laba Sumber perolehan Harta tersebut
+ASET
+LANCAR
+• Kas
+• Persediaan/Inventory
+• Piutang Usaha
+UTANG
+Uang yg diterima dari pihak di
+luar perusahaan (termasuk
+dari Karyawan & Pemilik) yang
+harus dikembalikan
+ASET
+TETAP
+• Peralatan Produksi
+• Gedung & Tanah 
+• Kendaraan
+MODAL
+Uang atau Aset lain yang
+disetorkan Pemilikyang
+dipertukarkan dengan Saham
+atas perusahaan
+LABA
+DITAHAN
+Laba (Rugi) dari periode
+sebelumnya yang tidak diambil
+oleh Pemilik. Merupakan nilai
+PENJUALAN dikurangi BIAYA
+Total AKTIVA harus SAMAdengan Total PASIVA
+Struktur Keuangan PerusahaanNERACA
+Menggambarkan Nilai Aset suatu Bisnis danStrukturnya (Harta, Utang, Modal)
+Setoran Modal
+Penarikan Modal
+Pendapatan
+Dividen
+Biaya
+Laba Ditahan
+Asset + Inventory
+Piutang
+Modal HutangAKTIVA PASIVA
+ASET
+LANCAR
+• Kas
+• Persediaan/Inventory
+• Piutang Usaha
+UTANG
+Uang yg diterima dari pihak di
+luar perusahaan (termasuk
+dari Karyawan & Pemilik) yang
+harus dikembalikan
+ASET
+TETAP
+• Peralatan Produksi
+• Gedung & Tanah 
+• Kendaraan
+MODAL
+Uang atau Aset lain yang
+disetorkan Pemilikyang
+dipertukarkan dengan Saham
+atas perusahaan
+LABA
+DITAHAN
+Laba (Rugi) dari periode
+sebelumnya yang tidak diambil
+oleh Pemilik. Merupakan nilai
+PENJUALAN dikurangi BIAYA
+Struktur Keuangan PerusahaanContoh Neraca
+Total Aktivaharus sama dengan Total PasivaLaporan PerubahanModal
+Setoran Modal
+Penarikan Modal
+Pendapatan
+Dividen
+Biaya
+Menggambarkan Nilai Bersih Kekayaan Perusahaan (Nilai Aset dikurangi Hutang)
+Laba DitahanContoh Laporan Perubahan Modal• Merupakan dasar pembuatan laporanneraca dan laporanlaba/rugi.
+• Memberikan informasi saldo ataupunnilai transaksi untuksetiap akun
+dalam suatu periodeakuntansi tertentu.
+Buku Besar
+TIPE AKUN PENAMBAHAN PENGURANGAN
+AKUN NERACA - AKTIVA
+Aset Debit Kredit
+Piutang Debit Kredit
+AKUN NERACA – AKTIVA
+Utang Kredit Debit
+Modal Kredit Debit
+Laba Ditahan Kredit Debit
+AKUN LABA / RUGI
+Pendapatan Kredit Debit
+Biaya Debit KreditContoh PencatatanBuku Besar
+Tgl Ket Debit Tgl Ket Kredit
+1/3 Setoran Modal Tn. A Rp. 100 2/3 Pembelian Bahan Baku Rp. 5
+Akun: KAS
+(Contoh Aktiva Lancar)
+Tgl Ket Debit Tgl Ket Kredit
+1/3 Setoran Modal Tn. A Rp. 100
+Akun: Modal
+(Contoh Pasiva)
+Tgl Ket Debit Tgl Ket Kredit
+2/3 Pembelian Bahan Baku Rp. 5
+Akun: BAHAN BAKU
+(Contoh Aktiva Lancar)
+Setoran Modal membuatKas bertambah,
+dan akun Modal bertambah
+Pembelian Bahan Baku membuatKas
+berkurang & Bahan Baku Bertambah
+Setiap transaksi / kejadian keuangan harus menimbulkan
+pencatatan di sisi kredit dan debit denganjumlah yang samaContoh Pencatatan Buku Besar
+Tgl Ket Debit Tgl Ket Kredit
+3/3 Utang Bank A Rp. 50 4/3 PemasanganIklan TV Rp. 3
+Akun: KAS
+(Contoh Aktiva Lancar)
+Tgl Ket Debit Tgl Ket Kredit
+3/3 Utang Bank A Rp. 50
+Akun: Utang
+(Contoh Pasiva)
+Tgl Ket Debit Tgl Ket Kredit
+4/3 Pemasangan Iklan TV Rp. 3
+Akun: BIAYA PEMASARAN
+(Contoh Akun Biaya)
+Penerimaan Utang Bank membuatKas
+bertambah & Utang Bertambah
+Pemasangan Iklan membuat Kas
+Berkurang & Akun Biaya BertambahContoh PencatatanBuku Besar
+Tgl Ket Debit Tgl Ket Kredit
+5/3 Penjualan ke PT. B Rp. 5
+6/3 Penjualan ke PT. C Rp. 3
+Akun: PENDAPATAN
+(Contoh Akun Pendapatan)
+Tgl Ket Debit Tgl Ket Kredit
+5/3 Penjualan ke PT. B Rp. 5
+Akun: Piutang
+(Contoh Aktiva Lancar)
+Tgl Ket Debit Tgl Ket Kredit
+6/3 Penjualan ke PT. C Rp. 3
+Akun: Kas
+(Contoh Aktiva Lancar)
+Penjualan secara non-cash membuat
+Pendapatan bertambah & Piutang bertambah
+Penjualan secara non-cash membuat
+Pendapatan bertambah & Piutang bertambahPencatatan keuanganawal (book of original entry), yang mencatat transaksi
+secara kronologis, danmerinci bagian debit & kredit
+Contoh sesuai Transaksi Buku Besar sebelumnya:
+Jurnal Umum
+Tgl Akun Ket/ Ref Debit Kredit
+1/3 Kas Setoran Modal Tn. A Rp. 100
+1/3 Modal Setoran Modal Tn. A Rp. 100
+2/3 Persediaan Pembelian Bahan Baku Rp. 5
+2/3 Kas PembelianBahan Baku Rp. 5
+3/3 Kas Utang dari Bank A Rp. 50
+3/3 Utang Utang dari Bank A Rp. 50
+4/3 Biaya Pemasaran Pemasangan Iklan TV Rp. 3
+4/3 Kas Pemasangan Iklan TV Rp. 3
+5/3 Piutang Penjualan ke PT.B Rp. 5
+5/3 Penjualan Penjualan ke PT.B Rp. 5
+6/3 Kas Penjualan ke PT.C Rp. 3
+6/3 Penjualan Penjualan ke PT.C Rp. 3
+Setiap transaksi
+harus tercatat
+seimbang debit
+& kredit
+Akun yang di-
+kredit dicatat
+menjorok ke
+kananLaporan Arus Kas
+(+) Setoran Modal
+(Penerimaan Kas)
+(-) Penarikan Modal
+(+) Pendapatan
+(Penerimaan Cash)
+(-) Pembayaran Utang
+(-) Biaya
+(Pembayaran Cash)
+(+) Penambahan Utang
+(dlm bentuk kas) (-) Belanja Aset& Persediaan
+(Pembelian secara Cash)
+Menggambarkan posisiperubahan nilai Kas. Diambil dari Akun Kas pada Buku
+Besar atau Jurnal KhususKas (Jika ada)Contoh Laporan Arus KasLaporan Laba Rugi
+(+) Pendapatan
+Cash & Piutang
+(-) Biaya
+Cash & Kredit
+Menggambarkan dinamika dankinerja suatu bisnis dalam periodetertentu
+Untungdicapai ketika:
+Pendapatan> Biaya + Bahan Terpakai
+Rugiterjadi ketika:
+Pendapatan< Biaya + Bahan Terpakai (-) Persediaan Bahan
+yang TerpakaiContoh Laporan Laba / RugiUntung, Rugi dan Bangkrut
+Untung
+Air masuk lebih banyakdaripadaair keluar
+Rugi
+Air keluarlebih banyak daripadaair masuk
+Bangkrut
+Ketinggianair dalam bakhabisAnalisa finansialIstilah Penting(Laba / Rugi)
+REVENUE / OMSET / PENDAPATAN
+Nilai Total Transaksi
+COST OF GOOD SOLD (COGS) /
+HARGA POKOK PRODUKSI (HPP)
+Total Biayayg terkait langsung dgn
+Pembuatan Produk (biaya variable),
+termasuk pemakaian bahan
+GROSS PROFIT / UNTUNG KOTOR
+Keuntungan Penjualansebelum
+dikurangi oleh Biaya Tidak Langsung
+LABA OPRASIONAL /
+OPERATING PROFIT /
+EARNING BEFORE INTEREST & TAX
+Keuntungan yang diperoleh dari aktivitas
+utama perusahaan
+INDIRECT COST / BIAYA TDK LANGSUNG
+Biaya yang tidak terkait langsung dgn
+proses produksi. Di antaranya biaya
+distribusi, biaya pemasaran, biaya
+operasional, termasuk biaya Depresiasi
+Aset (Penyusutan nilai Aset)
+NET INCOME / BOTTOM LINE
+Keuntungan Bersih
+PAJAK & BUNGARasio Penting
+(B) REVENUE / OMSET
+/ PENDAPATAN
+COST OF GOOD
+SOLD (COGS) /
+HARGA POKOK
+PRODUKSI
+(HPP)
+(A) GROSS PROFIT /
+UNTUNG KOTOR
+LABA OPRASIONAL /
+OPERATING PROFIT /
+EARNING BEFORE
+INTEREST & TAX
+INDIRECT COST /
+BIAYA TDK
+LANGSUNG
+(C) NET INCOME /
+BOTTOM LINE
+PAJAK &
+BUNGA
+Gross Profit
+Margin (A/B) Rasio Variable
+Cost / Fixed
+Cost ++
+Net Profit
+Margin (C/B)Istilah Umum (Terkait Aset)
+(D) ASET /
+ASSET
+(A) UTANG /
+LIABILITY / DEBT
+Debt to
+Equity Ratio
+(A/B)
+(B) MODAL /
+EQUITY
+KAS / CASH PERSEDIAAN /
+INVENTORY
+PIUTANG /
+RECEIVABLE
+ASET TETAP
+/FIXED ASSET
+(C) ASET LANCAR
+/CURRENT ASSET
+Liquidity: Current
+Ratio (C/A)
+Debt to Asset
+Ratio (A/D)
+(E) NET INCOME
+Return on
+Asset (E/D)
+Return on
+Equity (E/B)
+Belanja Modal /
+Capital ExpenditureThank You
